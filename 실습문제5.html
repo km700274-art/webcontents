@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>도형 서식 폼 만들기</title>
+    </head>
+    <body>
+        <h3>도형 서식 폼 만들기</h3>
+        <hr>
+        <form>
+            <fieldset>
+                <legend>도형 서식</legend>
+                선종류
+                <select name="선종류">
+                    <option value="실선">실선</option>
+                    <option value="점선" selected>점선</option>
+                    <option value="파선">선없음</option>
+                </select>
+                <br>
+                <table>
+                    <tr>
+                        <td>선두께</td>
+                        <td><input type="number" name="선두께" min="0.0" max="10.0" step="0.1"></td>
+                        <td>선색</td>
+                        <td><input type="color" value="#00BFFF" onchange="document.body.style.color=this.value"></td>
+                    </tr>
+                </table>
+                투명도(0~100) : <input type="range" name="투명도" min="0" max="100" value="50">
+            </fieldset>
+        </form>
+    </body>
+</html>
