@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>폐관수련 트래커</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Black+Han+Sans&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root{
+    --ink:#0f1117;
+    --paper:#fbfaf7;
+    --line:#e3ded3;
+    --accent:#2b5fff;      /* 한양대 블루 계열 */
+    --accent2:#ff5470;     /* 포인트 */
+    --dim:#8a8578;
+    --good:#1ea672;
+    --sky:#7fd4ff;         /* 하늘색 (폐관수련 글씨) */
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:#d9d6cd;
+    font-family:'Gowun Dodum',sans-serif;
+    color:var(--ink);
+    display:flex;justify-content:center;
+    padding:24px 12px;
+    min-height:100vh;
+  }
+  /* 인스타 캡처용 9:16 비율 카드 */
+  .card{
+    width:100%;max-width:430px;
+    background:var(--paper);
+    border-radius:26px;
+    overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.18);
+    border:1px solid var(--line);
+  }
+  .head{
+    background:linear-gradient(135deg,#16204a,#2b5fff);
+    color:#fff;padding:24px 24px 22px;
+    position:relative;
+  }
+  /* 상단 행: 왼쪽 텍스트 + 오른쪽 이미지 (겹치지 않게 가로 배치) */
+  .head-top{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;
+  }
+  .head-title{flex:1;min-width:0;}
+  .head .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:3px;
+    opacity:.8;text-transform:uppercase;
+  }
+  .head h1{
+    font-family:'Jua',sans-serif;
+    font-size:54px;line-height:1;margin-top:6px;
+    letter-spacing:1px;
+    color:var(--sky);
+    text-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+
+  /* === 우측 이미지 공간 (한양대 마크 등) === */
+  .head .logo-box{
+    flex:0 0 auto;
+    width:104px;height:104px;
+    border-radius:16px;
+    background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    font-size:11px;color:rgba(255,255,255,.6);text-align:center;
+  }
+  .head .logo-box img{
+    width:100%;height:100%;object-fit:cover;
+  }
+  .ddays{
+    display:flex;gap:10px;margin-top:18px;
+  }
+  .dday{
+    flex:1;background:rgba(255,255,255,.13);
+    border:1px solid rgba(255,255,255,.22);
+    border-radius:14px;padding:11px 12px;
+    text-align:center;backdrop-filter:blur(4px);
+  }
+  .dday .lab{font-size:10px;opacity:.85;letter-spacing:1px;}
+  .dday .num{
+    font-family:'Black Han Sans',sans-serif;
+    font-size:26px;margin-top:2px;line-height:1;
+  }
+  .dday .num small{font-size:12px;font-family:'Gowun Dodum';opacity:.8;}
+
+  .body{padding:22px 22px 8px;}
+  .today-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .today-row .date{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;color:var(--dim);
+  }
+  .streak{
+    font-size:12px;background:#fff0f3;color:var(--accent2);
+    border:1px solid #ffd6df;border-radius:20px;
+    padding:5px 11px;font-weight:700;
+  }
+
+  .input-zone{
+    background:#fff;border:1px solid var(--line);
+    border-radius:16px;padding:16px;margin-bottom:18px;
+  }
+  .input-zone label{font-size:13px;color:var(--dim);display:block;margin-bottom:8px;}
+  .in-line{display:flex;gap:8px;align-items:center;}
+  .in-line input{
+    flex:1;font-family:'JetBrains Mono',monospace;
+    font-size:22px;font-weight:700;
+    border:2px solid var(--line);border-radius:12px;
+    padding:10px 14px;color:var(--ink);outline:none;
+    transition:border-color .15s;
+  }
+  .in-line input:focus{border-color:var(--accent);}
+  .in-line .unit{font-size:15px;color:var(--dim);}
+  .in-line button{
+    background:var(--accent);color:#fff;border:none;
+    border-radius:12px;padding:11px 18px;font-size:15px;
+    font-family:'Gowun Dodum';cursor:pointer;font-weight:700;
+    transition:transform .1s,background .15s;
+  }
+  .in-line button:active{transform:scale(.95);}
+
+  .chart-wrap{margin-bottom:6px;}
+  .chart-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:10px;
+  }
+  .chart-head .t{font-family:'Black Han Sans';font-size:16px;letter-spacing:-.3px;}
+  .chart-head .avg{font-size:12px;color:var(--dim);font-family:'JetBrains Mono';}
+  svg{width:100%;display:block;overflow:visible;}
+
+  .stats{
+    display:flex;gap:8px;margin:16px 0 4px;
+  }
+  .stat{
+    flex:1;text-align:center;background:#fff;
+    border:1px solid var(--line);border-radius:13px;padding:11px 4px;
+  }
+  .stat .v{font-family:'Black Han Sans';font-size:21px;color:var(--accent);}
+  .stat .v.green{color:var(--good);}
+  .stat .v.pink{color:var(--accent2);}
+  .stat .l{font-size:10px;color:var(--dim);margin-top:2px;}
+
+  .foot{
+    text-align:center;padding:14px;color:var(--dim);
+    font-family:'JetBrains Mono';font-size:11px;letter-spacing:1px;
+    border-top:1px solid var(--line);margin-top:8px;
+  }
+  .foot b{color:var(--accent2);}
+
+  .tools{
+    max-width:430px;width:100%;margin-top:14px;
+    display:flex;gap:8px;
+  }
+  .tools button{
+    flex:1;background:#fff;border:1px solid var(--line);
+    border-radius:12px;padding:10px;font-family:'Gowun Dodum';
+    font-size:12px;color:var(--dim);cursor:pointer;
+  }
+  .tools button:active{background:#f0ede6;}
+
+  .empty{
+    text-align:center;color:var(--dim);font-size:13px;
+    padding:30px 10px;line-height:1.7;
+  }
+</style>
+</head>
+<body>
+  <div style="width:100%;max-width:430px;">
+    <div class="card" id="card">
+      <div class="head">
+        <div class="head-top">
+          <div class="head-title">
+            <div class="eyebrow">PHGWANSURYEON · D-DAY</div>
+            <h1>폐관수련</h1>
+          </div>
+          <!-- 우측 이미지: 아래 src에 한양대 마크 URL이나 파일경로 넣으면 됨.
+               이미지 없으면 빈 칸만 보임 -->
+          <div class="logo-box">
+            <img src="" alt="" onerror="this.style.display='none'">
+          </div>
+        </div>
+        <div class="ddays">
+          <div class="dday">
+            <div class="lab">9월 모평</div>
+            <div class="num" id="dday-mock">D-79</div>
+          </div>
+          <div class="dday">
+            <div class="lab">수능</div>
+            <div class="num" id="dday-suneung">D-157</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="today-row">
+          <div class="date" id="today-date">2026.06.15 (월)</div>
+          <div class="streak" id="streak">🔥 1일째</div>
+        </div>
+
+        <div class="input-zone">
+          <label>오늘 순공 시간을 입력하면 곡선에 찍혀요</label>
+          <div class="in-line">
+            <input type="number" id="hours" placeholder="0.0" step="0.5" min="0" max="24">
+            <span class="unit">시간</span>
+            <button onclick="addToday()">기록</button>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <div class="chart-head">
+            <span class="t">공부량 곡선</span>
+            <span class="avg" id="avg-label">평균 —</span>
+          </div>
+          <div id="chart-area">
+            <div class="empty">아직 기록이 없어요.<br>위에 오늘 공부 시간을 입력해보세요 ✏️</div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="v" id="s-total">0h</div><div class="l">누적</div></div>
+          <div class="stat"><div class="v green" id="s-best">0h</div><div class="l">최고 기록</div></div>
+          <div class="stat"><div class="v pink" id="s-days">0일</div><div class="l">기록한 날</div></div>
+        </div>
+      </div>
+
+      <div class="foot"><b>매일 1cm씩</b> · 한양대 가자</div>
+    </div>
+
+    <div class="tools">
+      <button onclick="undoLast()">↩ 오늘 기록 취소</button>
+      <button onclick="resetAll()">전체 초기화</button>
+    </div>
+  </div>
+
+<script>
+const KEY='pgws_study_log_v1';
+const SUNEUNG=new Date(2026,10,19); // 11/19
+const MOCK=new Date(2026,8,2);      // 9/2
+
+function loadLog(){
+  try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}
+}
+function saveLog(l){localStorage.setItem(KEY,JSON.stringify(l));}
+
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtDate(d){
+  const days=['일','월','화','수','목','금','토'];
+  return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+' ('+days[d.getDay()]+')';
+}
+function ddays(){
+  const now=new Date();now.setHours(0,0,0,0);
+  const dM=Math.ceil((MOCK-now)/864e5);
+  const dS=Math.ceil((SUNEUNG-now)/864e5);
+  document.getElementById('dday-mock').textContent='D-'+dM;
+  document.getElementById('dday-suneung').textContent='D-'+dS;
+  document.getElementById('today-date').textContent=fmtDate(new Date());
+}
+
+function addToday(){
+  const v=parseFloat(document.getElementById('hours').value);
+  if(isNaN(v)||v<0){return;}
+  let log=loadLog();
+  const t=todayStr();
+  const idx=log.findIndex(e=>e.date===t);
+  if(idx>=0){log[idx].hours=v;}
+  else{log.push({date:t,hours:v});}
+  log.sort((a,b)=>a.date.localeCompare(b.date));
+  saveLog(log);
+  document.getElementById('hours').value='';
+  render();
+}
+function undoLast(){
+  let log=loadLog();
+  const t=todayStr();
+  log=log.filter(e=>e.date!==t);
+  saveLog(log);render();
+}
+function resetAll(){
+  if(confirm('모든 기록을 지울까요? 되돌릴 수 없어요.')){
+    localStorage.removeItem(KEY);render();
+  }
+}
+
+function render(){
+  ddays();
+  const log=loadLog();
+  const area=document.getElementById('chart-area');
+
+  if(log.length===0){
+    area.innerHTML='<div class="empty">아직 기록이 없어요.<br>위에 오늘 공부 시간을 입력해보세요 ✏️</div>';
+    document.getElementById('s-total').textContent='0h';
+    document.getElementById('s-best').textContent='0h';
+    document.getElementById('s-days').textContent='0일';
+    document.getElementById('avg-label').textContent='평균 —';
+    document.getElementById('streak').textContent='🔥 1일째';
+    return;
+  }
+
+  // 최근 14개만 곡선에 표시
+  const data=log.slice(-14);
+  const total=log.reduce((s,e)=>s+e.hours,0);
+  const best=Math.max(...log.map(e=>e.hours));
+  const avg=total/log.length;
+
+  document.getElementById('s-total').textContent=total.toFixed(1)+'h';
+  document.getElementById('s-best').textContent=best.toFixed(1)+'h';
+  document.getElementById('s-days').textContent=log.length+'일';
+  document.getElementById('avg-label').textContent='평균 '+avg.toFixed(1)+'h';
+  document.getElementById('streak').textContent='🔥 '+log.length+'일째';
+
+  // SVG 곡선 그리기
+  const W=386,H=170,padL=26,padR=12,padT=14,padB=26;
+  const maxV=Math.max(best,Math.ceil(best),4);
+  const n=data.length;
+  const xStep=n>1?(W-padL-padR)/(n-1):0;
+  const xAt=i=>padL+xStep*i;
+  const yAt=v=>padT+(H-padT-padB)*(1-v/maxV);
+
+  // smooth path (catmull-rom -> bezier)
+  const pts=data.map((e,i)=>[xAt(i),yAt(e.hours)]);
+  let d='';
+  if(pts.length===1){
+    d=`M ${pts[0][0]} ${pts[0][1]}`;
+  }else{
+    d=`M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+      const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
+      const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+      d+=` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2[0]} ${p2[1]}`;
+    }
+  }
+  const areaD=d+` L ${pts[pts.length-1][0]} ${H-padB} L ${pts[0][0]} ${H-padB} Z`;
+
+  // y 그리드 (0, half, max)
+  let grid='';
+  [0,maxV/2,maxV].forEach(v=>{
+    const y=yAt(v);
+    grid+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#ece8df" stroke-width="1"/>`;
+    grid+=`<text x="${padL-6}" y="${y+3}" text-anchor="end" font-size="9" fill="#b3ab9c" font-family="JetBrains Mono">${v%1===0?v:v.toFixed(0)}</text>`;
+  });
+
+  // 점 + 마지막 강조
+  let dots='';
+  pts.forEach((p,i)=>{
+    const last=i===pts.length-1;
+    dots+=`<circle cx="${p[0]}" cy="${p[1]}" r="${last?5:3}" fill="${last?'#ff5470':'#2b5fff'}" stroke="#fff" stroke-width="${last?2.5:1.5}"/>`;
+    if(last){
+      dots+=`<text x="${p[0]}" y="${p[1]-12}" text-anchor="middle" font-size="12" font-weight="700" fill="#ff5470" font-family="JetBrains Mono">${data[i].hours}h</text>`;
+    }
+  });
+
+  // x 라벨 (며칠 표시: 처음/중간/끝)
+  let xlab='';
+  const showIdx=[0,Math.floor((n-1)/2),n-1];
+  [...new Set(showIdx)].forEach(i=>{
+    const dd=data[i].date.slice(5).replace('-','/');
+    xlab+=`<text x="${xAt(i)}" y="${H-padB+15}" text-anchor="middle" font-size="9" fill="#b3ab9c" font-family="JetBrains Mono">${dd}</text>`;
+  });
+
+  area.innerHTML=`<svg viewBox="0 0 ${W} ${H}">
+    <defs>
+      <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2b5fff" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="#2b5fff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${grid}
+    <path d="${areaD}" fill="url(#fill)"/>
+    <path d="${d}" fill="none" stroke="#2b5fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+    ${xlab}
+  </svg>`;
+}
+
+render();
+</script>
+</body>
+</html>
